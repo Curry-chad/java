@@ -1,1 +1,63 @@
 just beginning!
+----------------server--------------------
+package cn.itsource.chat;
+import java.io.IOException;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+import javax.websocket.server.ServerEndpoint;
+/**
+ * WebSocket服务器端
+ *@ServerEndpoint 申明当前类就是WebSocket的服务器端
+ *其中/chat表示WebSocket的名字  客户端调用的时候要用到
+ */
+@ServerEndpoint("/chat")
+public class ChatServer {
+	private Session session=null;
+	private static CopyOnWriteArraySet<ChatServer> servers = new CopyOnWriteArraySet<ChatServer>();
+/**
+ * 当客户端连接成功后执行调用的方法
+ * @param session
+ */
+@OnOpen
+public void onOpen(Session session){
+	this.session=session;
+	servers.add(this);
+System.out.println("连接已经建立："+session.getId());
+}
+/**
+ * 接收客户端发送的消息
+ * @param msg  客户端发送的消息
+ */
+@OnMessage
+public void onMessage(String msg){
+System.out.println("客户端发送的数据："+msg);
+try {
+	for(ChatServer server : servers){
+		server.session.getBasicRemote().sendText(msg);
+		}
+} catch (IOException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}
+
+}
+/**
+ * 发生错误时调用的方法
+ * @param error
+ */
+@OnError
+public void onError(Throwable error){
+System.out.println("发生错误");
+error.printStackTrace();
+}
+@OnClose
+public void onClose(){
+System.out.println("连接关闭");
+servers.remove(this);
+}
+}
