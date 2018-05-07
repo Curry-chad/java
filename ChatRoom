@@ -61,3 +61,116 @@ System.out.println("连接关闭");
 servers.remove(this);
 }
 }
+------------------servlet---------------------
+package cn.itsource.chat;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+@WebServlet("/UserServlet")
+public class UserServlet extends HttpServlet {
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		super.doGet(req, resp);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.setCharacterEncoding("UTF-8");
+		String nick=req.getParameter("nick");
+		req.setAttribute("nick", nick);
+		req.getRequestDispatcher("chat.jsp").forward(req, resp);
+	}
+
+}
+----------------------------index.jsp---------------------------
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<h1>1213 聊天室   登录</h1>
+<form action="UserServlet" method="post">
+请输入昵称：<input type="text" name="nick"  required="required" />
+<input type="submit" value="登录" />
+</form>
+</body>
+
+</html>
+-------------------chat.jsp----------------------------
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<h1>CHAD聊天室</h1>
+<div id="test">
+</div>
+<input type="text" id="send" /><button onclick="sendmessage()" >发送</button>
+</body>
+<script type="text/javascript">
+//建立连接
+var ws = new WebSocket("ws://172.18.1.81:8080/demo/chat");
+ws.onopen = function(){
+	//向服务器端发送消息
+	<%String nick=(String)request.getAttribute("nick");%>
+	ws.send("欢迎<%=nick%>加入聊天室");
+}
+ws.onmessage = function(event){
+	showMessage(event.data);
+	}
+/* function showMessage(msg){
+	var html = $("#message").html();
+	html = html+"<li>"+msg+"</li>";
+	 $("#message").html(html);
+	} */
+//接收录入的消息并发送给服务器端
+<%-- $("#msg").textbox({
+onClickButton:function(){
+//发送消息到服务器端
+var message = $("#msg").val();
+          ws.send("[<%=nick%>]说：<br/>"+ message);
+//清空原来的值
+$(this).textbox('clear');
+}
+}); --%>
+//将消息显示到页面中
+function showMessage(msg){
+	var input=document.getElementById("send");
+	var message=input.value;
+var li =document.createElement("li");
+var div=document.getElementById("test");
+li.innerHTML=msg;
+div.appendChild(li);
+
+/* //追加内容
+message.html(html);
+//滚动到最新
+message.scrollTop(message[0].scrollHeight); */
+}
+function sendmessage()
+{
+	var input=document.getElementById("send");
+	var message=input.value;
+	ws.send("<%=nick%>说"+message);
+	input.innerHTML=" ";
+}
+</script>
+</html>
+
+
+
